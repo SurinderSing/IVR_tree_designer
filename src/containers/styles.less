@@ -1,0 +1,77 @@
+.Tree-Menu {
+  display: flex;
+  flex-wrap: wrap;
+  .Tree-option {
+    background-color: rgba(100, 149, 237, 0.2);
+    width: 9rem;
+    min-height: 7rem;
+    margin: 5px;
+    display: grid;
+    place-items: center;
+  }
+  .Tree-option:hover {
+    background-color: rgba(100, 149, 237, 0.4);
+    transform: scale(1.03);
+    width: 9rem;
+    min-height: 7rem;
+    margin: 5px;
+    display: grid;
+    place-items: center;
+    transition: all 0.2s linear;
+  }
+}
+#canvas {
+  position: relative;
+  padding: 0px;
+  margin: 0px;
+  width: auto;
+  height: 75vh;
+  overflow: hidden;
+}
+
+#tree-layout-container {
+  height: 83vh;
+  width: 100%;
+  background-color: white;
+}
+
+.touchdevice-flow {
+  .react-flow__node {
+    min-width: 9rem;
+    width: min-content;
+    
+  }
+  .react-flow__handle {
+    width: 20px;
+    height: 10px;
+    border-radius: 25px;
+    background-color: #293275;
+  }
+  .react-flow__handle:hover {
+    width: 30px;
+    height: 10px;
+  }
+  .react-flow__edge-path {
+    stroke-width: 5;
+  }
+  .react-flow__edge-path:hover {
+    stroke-width: 7;
+    cursor: pointer;
+  }
+  .react-flow__attribution a{
+    display: none;
+  }
+}
+.nodeBtn {
+  border: none;
+  color: #fff;
+  background-color: #293275;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  height: 20px;
+  width: 20px;
+  padding: 0;
+}
