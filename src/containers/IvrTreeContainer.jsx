@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from "react";
+import React, { useState, useEffect, useLayoutEffect, Fragment } from "react";
 import dagre from "dagre";
 import { Modal, Button, Form, Input, Select } from "antd";
 import ReactFlow, {
@@ -9,6 +9,8 @@ import ReactFlow, {
   Controls,
 } from "react-flow-renderer";
 import "./styles.less";
+
+import Request from "../request.js";
 
 // Implimentation of Darge Tree ::--
 
@@ -81,19 +83,85 @@ const actionTypeOptions = [
 
 const actionIvrOptions = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
-let id = 0;
-
 let position = {
   x: 0,
   y: 0,
 };
 
 function IvrTreeContainer() {
-  const initialNodes = [];
-  const initialEdges = [];
+  // States ::--
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [actionFieldType, setActionFieldType] = useState(false);
+  const [targetId, setTargetId] = useState(null);
+
   // Defining Nodes and Edges ::--
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  // API Reduests::
+  const getData = async () => {
+    const newNodes = await Request.getNodes();
+    const newEdges = await Request.getEdges();
+    if (newNodes && newEdges) {
+      if (newNodes[0] === undefined) {
+        return setIsModalVisible(true);
+      }
+      setTargetId(newNodes[newNodes.length - 1].id + 1);
+      const newNodeArr = newNodes.map((currentNode, index) => {
+        console.log(index);
+        if (index === 0) {
+          return {
+            id: currentNode?.id.toString(),
+            type: "input",
+            data: {
+              label: (
+                <Fragment key={index}>
+                  <h1>{currentNode?.trigger_digit}</h1>
+                  <hr />
+                  <h2>{currentNode?.action_type}</h2>
+                  <hr />
+                  <p>{currentNode?.action}</p>
+                </Fragment>
+              ),
+            },
+            position,
+          };
+        }
+        return {
+          id: currentNode?.id.toString(),
+          // type: "input",
+          data: {
+            label: (
+              <Fragment key={index}>
+                <h1>{currentNode?.trigger_digit}</h1>
+                <hr />
+                <h2>{currentNode?.action_type}</h2>
+                <hr />
+                <p>{currentNode?.action}</p>
+              </Fragment>
+            ),
+          },
+          position,
+        };
+      });
+      setNodes(newNodeArr);
+      const newEdgeArr = newEdges.map((currentNode) => {
+        return {
+          id: currentNode?.e_id,
+          source: currentNode?.source.toString(),
+          type: "smoothstep",
+          target: currentNode?.target.toString(),
+          animated: true,
+        };
+      });
+      setEdges(newEdgeArr);
+    }
+  };
+  useLayoutEffect(() => {
+    getData();
+  }, []);
 
   useEffect(() => {
     getLayoutedElements(nodes, edges);
@@ -110,71 +178,29 @@ function IvrTreeContainer() {
   //   []
   // );
 
-  //
-  // useEffects ::--
-  useEffect(() => {
-    if (nodes[0] === undefined) {
-      setIsModalVisible(true);
-    }
-  }, []);
-
-  // States ::--
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [actionFieldType, setActionFieldType] = useState(false);
-  // Defining Functions ::--
-  const onFinish = (values) => {
-    if (nodes[0] === undefined) {
-      setNodes([
-        ...nodes,
-        {
-          id: id.toString(),
-          type: "input",
-          data: {
-            label: (
-              <Fragment>
-                <h1>{values?.triggerDigit}</h1>
-                <hr />
-                <h2>{values?.actionType}</h2>
-                <hr />
-                <p>{values?.action}</p>
-              </Fragment>
-            ),
-          },
-          position,
-        },
-      ]);
+  const createNewNode = async (values) => {
+    if (nodes[0] !== undefined) {
+      await Request.createNode(
+        values?.triggerDigit,
+        values?.actionType,
+        values?.action
+      );
+      const e_id = `${selectedNode?.id}-${targetId}`;
+      await Request.createEdge(e_id, +selectedNode?.id, targetId);
+      getData();
     } else {
-      setNodes([
-        ...nodes,
-        {
-          id: id.toString(),
-          data: {
-            label: (
-              <Fragment>
-                <h1>{values?.triggerDigit}</h1>
-                <hr />
-                <h2>{values?.actionType}</h2>
-                <hr />
-                <p>{values?.action}</p>
-              </Fragment>
-            ),
-          },
-          position,
-        },
-      ]);
-      setEdges([
-        ...edges,
-        {
-          id: selectedNode?.id + "-" + id.toString(),
-          source: selectedNode?.id,
-          target: id.toString(),
-          animated: true,
-        },
-      ]);
+      await Request.createNode(
+        values?.triggerDigit,
+        values?.actionType,
+        values?.action
+      );
+      getData();
     }
     setIsModalVisible(false);
-    id += 1;
+  };
+
+  const onFinish = (values) => {
+    createNewNode(values);
   };
 
   const ActionField = (e) => {
@@ -206,10 +232,10 @@ function IvrTreeContainer() {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        minZoom = {0}
+        minZoom={0}
         // onConnect={onConnect}
         zoomOnDoubleClick={false}
-        fitView={true}
+        fitView={false}
         onlyRenderVisibleElements={true}
         snapGrid={[40, 40]}
         snapToGrid={true}

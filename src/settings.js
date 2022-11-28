@@ -1,0 +1,11 @@
+export const apiUrl = 'http://192.168.10.19:8000'
+export const SocketUrl = 'wss://app.dialmantra.ca/ws/dashboard?token='
+export const DateFormat = 'DD-MM-YYYY'
+export const Test = 'collaberus'
+export const ExcelFormat = '.csv,.xls,.xlsx'
+export const ExcelDownloadFormat = 'xls'
+export const AudioDownloadFormat = 'wav'
+export const AudioUploadFormat = '.mp3,.wav,.sln,.gsm'
+export const ImageFileFormat = '.png,.jpeg,.pdf,.jpg'
+export const MaxExcelSize = 5
+export const MaxAudioSize = 5
