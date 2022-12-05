@@ -63,6 +63,32 @@ let position = {
   y: 0,
 };
 
+const getLayoutedElements = (nodes, edges) => {
+  dagreGraph.setGraph({});
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  nodes.forEach((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    node.position = {
+      x: nodeWithPosition.x - nodeWidth / 2,
+      y: nodeWithPosition.y - nodeHeight / 2,
+    };
+
+    return node;
+  });
+
+  return { nodes, edges };
+};
+
 const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
   const [actionFieldType, setActionFieldType] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -95,18 +121,15 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
     getData();
     setIsEditModalVisible(false);
   };
+  const confirm = () => {
+    delNodes(currentNode?.id);
+  };
 
   return (
     <Fragment key={index}>
-      <div
-        className="deleteNode"
-        onClick={() => {
-          delNodes(currentNode?.id);
-          console.log(`${currentNode?.id} node Deleted`);
-        }}
-      >
-        +
-      </div>
+      <Popconfirm title="Delete Node" onConfirm={confirm}>
+        <div className="deleteNode">+</div>
+      </Popconfirm>
       <EditOutlined
         style={{
           fontSize: "25px",
@@ -239,7 +262,7 @@ function IvrTreeContainer() {
     const newEdges = await Request.getEdges();
     if (newNodes && newEdges) {
       if (newNodes[0] === undefined) {
-        return setIsModalVisible(true);
+        setIsModalVisible(true);
       }
       // setTargetId(newNodes[newNodes.length - 1].id + 1);
       const newNodeArr = newNodes.map((currentNode, index) => {
@@ -289,32 +312,6 @@ function IvrTreeContainer() {
       });
       setEdges(newEdgeArr);
     }
-  };
-
-  const getLayoutedElements = (nodes, edges) => {
-    dagreGraph.setGraph({});
-
-    nodes.forEach((node) => {
-      dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-    });
-
-    edges.forEach((edge) => {
-      dagreGraph.setEdge(edge.source, edge.target);
-    });
-
-    dagre.layout(dagreGraph);
-
-    nodes.forEach((node) => {
-      const nodeWithPosition = dagreGraph.node(node.id);
-      node.position = {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
-      };
-
-      return node;
-    });
-
-    return { nodes, edges };
   };
 
   useLayoutEffect(() => {
