@@ -97,7 +97,7 @@ function IvrTreeContainer() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
   const [actionFieldType, setActionFieldType] = useState(false);
-  const [targetId, setTargetId] = useState(null);
+  // const [targetId, setTargetId] = useState(null);
 
   // Defining Nodes and Edges ::--
 
@@ -117,7 +117,7 @@ function IvrTreeContainer() {
       if (newNodes[0] === undefined) {
         return setIsModalVisible(true);
       }
-      setTargetId(newNodes[newNodes.length - 1].id + 1);
+      // setTargetId(newNodes[newNodes.length - 1].id + 1);
       const newNodeArr = newNodes.map((currentNode, index) => {
         if (index === 0) {
           return {
@@ -171,13 +171,13 @@ function IvrTreeContainer() {
 
   const createNewNode = async (values) => {
     if (nodes[0] !== undefined) {
-      await Request.createNode(
+      const lastCreatedNode = await Request.createNode(
         values?.triggerDigit,
         values?.actionType,
         values?.action
       );
-      const e_id = `${selectedNode?.id}-${targetId}`;
-      await Request.createEdge(e_id, +selectedNode?.id, targetId);
+      const e_id = `${selectedNode?.id}-${lastCreatedNode.id}`;
+      await Request.createEdge(e_id, +selectedNode?.id, lastCreatedNode.id);
       getData();
     } else {
       await Request.createNode(
