@@ -114,6 +114,32 @@ class Request {
                 })
         })
     }
+    deleteNode(id) {
+        return new Promise((next, error) => {
+            authAxios
+                .post(`/ivrtree_node_delete/${id}/`, {})
+                .then(d => {
+                    next(d.data)
+                })
+                .catch(err => {
+                    next({ error: true, err })
+                    this.error(err)
+                })
+        })
+    }
+    deleteEdge(id) {
+        return new Promise((next, error) => {
+            authAxios
+                .post(`/node_edge_delete/${id}/`, {})
+                .then(d => {
+                    next(d.data)
+                })
+                .catch(err => {
+                    next({ error: true, err })
+                    this.error(err)
+                })
+        })
+    }
 }
 
 export default new Request();

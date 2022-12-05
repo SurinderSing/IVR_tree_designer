@@ -39,7 +39,6 @@
   .react-flow__node {
     min-width: 9rem;
     width: min-content;
-    
   }
   .react-flow__handle {
     width: 20px;
@@ -58,20 +57,34 @@
     stroke-width: 7;
     cursor: pointer;
   }
-  .react-flow__attribution a{
+  .react-flow__attribution a {
     display: none;
   }
 }
 .nodeBtn {
+  cursor: pointer;
   border: none;
   color: #fff;
   background-color: #293275;
-  border-radius: 20px;
+  border-radius: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
   margin: auto;
   height: 20px;
   width: 20px;
+  padding: 0;
+  // font-size: 20px;
+}
+
+.deleteNode {
+  cursor: pointer;
+  border: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50px;
+  background-color: #293275;
+  color: #fff;
+  transform: rotateZ(45deg) scale(2) translate(36px, -49px);
   padding: 0;
 }

@@ -20,32 +20,6 @@ dagreGraph.setDefaultEdgeLabel(() => ({}));
 const nodeWidth = 250;
 const nodeHeight = 200;
 
-const getLayoutedElements = (nodes, edges) => {
-  dagreGraph.setGraph({});
-
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-  });
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(dagreGraph);
-
-  nodes.forEach((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
-    node.position = {
-      x: nodeWithPosition.x - nodeWidth / 2,
-      y: nodeWithPosition.y - nodeHeight / 2,
-    };
-
-    return node;
-  });
-
-  return { nodes, edges };
-};
-
 // Defining Veriables ::--
 const layout = {
   labelCol: {
@@ -88,6 +62,36 @@ let position = {
   y: 0,
 };
 
+const NodeFrame = ({ index, delNodes, currentNode, addNode }) => {
+  return (
+    <Fragment key={index}>
+      <div
+        className="deleteNode"
+        onClick={() => {
+          delNodes(currentNode?.id);
+          console.log(`${currentNode?.id} node Deleted`);
+        }}
+      >
+        +
+      </div>
+      <h1>{currentNode?.trigger_digit}</h1>
+      <hr />
+      <h2>{currentNode?.action_type}</h2>
+      <hr />
+      <p>{currentNode?.action}</p>
+      <hr />
+      <div
+        className="nodeBtn"
+        onClick={() => {
+          addNode(currentNode);
+        }}
+      >
+        +
+      </div>
+    </Fragment>
+  );
+};
+
 function IvrTreeContainer() {
   // States ::--
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -101,6 +105,11 @@ function IvrTreeContainer() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   // API Reduests::
+  const delNodes = async (id) => {
+    await Request.deleteNode(id);
+    getData();
+  };
+
   const getData = async () => {
     const newNodes = await Request.getNodes();
     const newEdges = await Request.getEdges();
@@ -110,20 +119,18 @@ function IvrTreeContainer() {
       }
       setTargetId(newNodes[newNodes.length - 1].id + 1);
       const newNodeArr = newNodes.map((currentNode, index) => {
-        console.log(index);
         if (index === 0) {
           return {
             id: currentNode?.id.toString(),
             type: "input",
             data: {
               label: (
-                <Fragment key={index}>
-                  <h1>{currentNode?.trigger_digit}</h1>
-                  <hr />
-                  <h2>{currentNode?.action_type}</h2>
-                  <hr />
-                  <p>{currentNode?.action}</p>
-                </Fragment>
+                <NodeFrame
+                  index={index}
+                  delNodes={delNodes}
+                  currentNode={currentNode}
+                  addNode={addNode}
+                />
               ),
             },
             position,
@@ -131,16 +138,14 @@ function IvrTreeContainer() {
         }
         return {
           id: currentNode?.id.toString(),
-          // type: "input",
           data: {
             label: (
-              <Fragment key={index}>
-                <h1>{currentNode?.trigger_digit}</h1>
-                <hr />
-                <h2>{currentNode?.action_type}</h2>
-                <hr />
-                <p>{currentNode?.action}</p>
-              </Fragment>
+              <NodeFrame
+                index={index}
+                delNodes={delNodes}
+                currentNode={currentNode}
+                addNode={addNode}
+              />
             ),
           },
           position,
@@ -159,24 +164,10 @@ function IvrTreeContainer() {
       setEdges(newEdgeArr);
     }
   };
-  useLayoutEffect(() => {
-    getData();
-  }, []);
 
   useEffect(() => {
-    getLayoutedElements(nodes, edges);
-  }, [nodes, edges]);
-
-  // const onConnect = useCallback(
-  //   (params) =>
-  //     setEdges((eds) =>
-  //       addEdge(
-  //         { ...params, type: ConnectionLineType.SmoothStep, animated: true },
-  //         eds
-  //       )
-  //     ),
-  //   []
-  // );
+    getData();
+  }, []);
 
   const createNewNode = async (values) => {
     if (nodes[0] !== undefined) {
@@ -211,12 +202,7 @@ function IvrTreeContainer() {
     }
   };
 
-  // const onConnect = useCallback(
-  //   (params) => setEdges((els) => addEdge(params, els)),
-  //   [setEdges]
-  // );
-
-  const addNode = (event, node) => {
+  const addNode = (node) => {
     setIsModalVisible(true);
     setSelectedNode(() => node);
   };
@@ -225,6 +211,36 @@ function IvrTreeContainer() {
     setIsModalVisible(false);
   };
 
+  const getLayoutedElements = (nodes, edges) => {
+    dagreGraph.setGraph({});
+
+    nodes.forEach((node) => {
+      dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+    });
+
+    edges.forEach((edge) => {
+      dagreGraph.setEdge(edge.source, edge.target);
+    });
+
+    dagre.layout(dagreGraph);
+
+    nodes.forEach((node) => {
+      const nodeWithPosition = dagreGraph.node(node.id);
+      node.position = {
+        x: nodeWithPosition.x - nodeWidth / 2,
+        y: nodeWithPosition.y - nodeHeight / 2,
+      };
+
+      return node;
+    });
+
+    return { nodes, edges };
+  };
+
+  useLayoutEffect(() => {
+    getLayoutedElements(nodes, edges);
+  }, [nodes, edges]);
+
   return (
     <div id="tree-layout-container">
       <ReactFlow
@@ -232,16 +248,12 @@ function IvrTreeContainer() {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        minZoom={0}
-        // onConnect={onConnect}
+        minZoom={0.6}
         zoomOnDoubleClick={false}
-        fitView={false}
+        fitView={true}
         onlyRenderVisibleElements={true}
-        snapGrid={[40, 40]}
-        snapToGrid={true}
         attributionPosition="bottom-left"
         className="touchdevice-flow"
-        onNodeDoubleClick={addNode}
         defaultEdgeOptions={{
           animated: true,
         }}
