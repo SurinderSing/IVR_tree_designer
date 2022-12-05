@@ -127,10 +127,10 @@ class Request {
                 })
         })
     }
-    deleteEdge(id) {
+    updateNode(trigger_digit, action_type, action, id) {
         return new Promise((next, error) => {
             authAxios
-                .post(`/node_edge_delete/${id}/`, {})
+                .post(`/ivrtree_node_update/${id}/`, { trigger_digit: trigger_digit, action_type: action_type, action: action })
                 .then(d => {
                     next(d.data)
                 })

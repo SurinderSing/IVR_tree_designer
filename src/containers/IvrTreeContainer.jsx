@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, Fragment } from "react";
 import dagre from "dagre";
-import { Modal, Button, Form, Input, Select } from "antd";
+import { Modal, Button, Form, Input, Select, Popconfirm } from "antd";
+import { EditOutlined } from "@ant-design/icons";
 import ReactFlow, {
   useNodesState,
   useEdgesState,
@@ -62,7 +63,39 @@ let position = {
   y: 0,
 };
 
-const NodeFrame = ({ index, delNodes, currentNode, addNode }) => {
+const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
+  const [actionFieldType, setActionFieldType] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [selectedNode, setSelectedNode] = useState(null);
+
+  const ActionField = (e) => {
+    if (e !== "IVR") {
+      setActionFieldType(false);
+    } else {
+      setActionFieldType(true);
+    }
+  };
+
+  const editNode = (node) => {
+    setIsEditModalVisible(true);
+    setSelectedNode(() => node);
+  };
+
+  const handleCancel = () => {
+    setIsEditModalVisible(false);
+  };
+
+  const editfinish = async (values) => {
+    await Request.updateNode(
+      values?.triggerDigit,
+      values?.actionType,
+      values?.action,
+      selectedNode.id
+    );
+    getData();
+    setIsEditModalVisible(false);
+  };
+
   return (
     <Fragment key={index}>
       <div
@@ -74,6 +107,22 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode }) => {
       >
         +
       </div>
+      <EditOutlined
+        style={{
+          fontSize: "25px",
+          padding: "5px",
+          cursor: "pointer",
+          border: "3px solid #293275",
+          borderRadius: "50px",
+          background: "#fff",
+          position: "absolute",
+          top: "-18px",
+          left: "-18px",
+        }}
+        onClick={() => {
+          editNode(currentNode);
+        }}
+      />
       <h1>{currentNode?.trigger_digit}</h1>
       <hr />
       <h2>{currentNode?.action_type}</h2>
@@ -88,6 +137,81 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode }) => {
       >
         +
       </div>
+      <Modal
+        title="Create Node"
+        visible={isEditModalVisible}
+        footer={null}
+        onCancel={handleCancel}
+      >
+        <Form {...layout} name="IVR Tree" onFinish={editfinish}>
+          <Form.Item
+            name={"triggerDigit"}
+            label="Trigger Digit"
+            rules={[
+              {
+                required: true,
+              },
+            ]}
+          >
+            <Select>
+              {triggerDigitOptions.map((triggerDigitOption, index) => {
+                return (
+                  <Select.Option value={triggerDigitOption} key={index}>
+                    {triggerDigitOption}
+                  </Select.Option>
+                );
+              })}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name={"actionType"}
+            label="Action Type"
+            rules={[
+              {
+                required: true,
+              },
+            ]}
+          >
+            <Select onChange={ActionField}>
+              {actionTypeOptions.map((actionTypeOptions, index) => {
+                return (
+                  <Select.Option value={actionTypeOptions} key={index}>
+                    {actionTypeOptions}
+                  </Select.Option>
+                );
+              })}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name={"action"}
+            label="Action"
+            rules={[
+              {
+                required: true,
+              },
+            ]}
+          >
+            {actionFieldType ? (
+              <Select>
+                {actionIvrOptions.map((actionIvrOptions, index) => {
+                  return (
+                    <Select.Option value={actionIvrOptions} key={index}>
+                      {actionIvrOptions}
+                    </Select.Option>
+                  );
+                })}
+              </Select>
+            ) : (
+              <Input />
+            )}
+          </Form.Item>
+          <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </Fragment>
   );
 };
@@ -130,6 +254,7 @@ function IvrTreeContainer() {
                   delNodes={delNodes}
                   currentNode={currentNode}
                   addNode={addNode}
+                  getData={getData}
                 />
               ),
             },
@@ -145,6 +270,7 @@ function IvrTreeContainer() {
                 delNodes={delNodes}
                 currentNode={currentNode}
                 addNode={addNode}
+                getData={getData}
               />
             ),
           },
@@ -164,6 +290,36 @@ function IvrTreeContainer() {
       setEdges(newEdgeArr);
     }
   };
+
+  const getLayoutedElements = (nodes, edges) => {
+    dagreGraph.setGraph({});
+
+    nodes.forEach((node) => {
+      dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+    });
+
+    edges.forEach((edge) => {
+      dagreGraph.setEdge(edge.source, edge.target);
+    });
+
+    dagre.layout(dagreGraph);
+
+    nodes.forEach((node) => {
+      const nodeWithPosition = dagreGraph.node(node.id);
+      node.position = {
+        x: nodeWithPosition.x - nodeWidth / 2,
+        y: nodeWithPosition.y - nodeHeight / 2,
+      };
+
+      return node;
+    });
+
+    return { nodes, edges };
+  };
+
+  useLayoutEffect(() => {
+    getLayoutedElements(nodes, edges);
+  }, [nodes, edges]);
 
   useEffect(() => {
     getData();
@@ -210,36 +366,6 @@ function IvrTreeContainer() {
   const handleCancel = () => {
     setIsModalVisible(false);
   };
-
-  const getLayoutedElements = (nodes, edges) => {
-    dagreGraph.setGraph({});
-
-    nodes.forEach((node) => {
-      dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-    });
-
-    edges.forEach((edge) => {
-      dagreGraph.setEdge(edge.source, edge.target);
-    });
-
-    dagre.layout(dagreGraph);
-
-    nodes.forEach((node) => {
-      const nodeWithPosition = dagreGraph.node(node.id);
-      node.position = {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
-      };
-
-      return node;
-    });
-
-    return { nodes, edges };
-  };
-
-  useLayoutEffect(() => {
-    getLayoutedElements(nodes, edges);
-  }, [nodes, edges]);
 
   return (
     <div id="tree-layout-container">
