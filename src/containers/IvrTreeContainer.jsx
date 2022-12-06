@@ -105,6 +105,7 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
   const editNode = (node) => {
     setIsEditModalVisible(true);
     setSelectedNode(() => node);
+    console.log(selectedNode);
   };
 
   const handleCancel = () => {
@@ -127,7 +128,7 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
 
   return (
     <Fragment key={index}>
-      <Popconfirm title="Delete Node" onConfirm={confirm}>
+      <Popconfirm title="Delete this node." onConfirm={confirm}>
         <div className="deleteNode">+</div>
       </Popconfirm>
       <EditOutlined
@@ -168,6 +169,7 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
       >
         <Form {...layout} name="IVR Tree" onFinish={editfinish}>
           <Form.Item
+            initialValue={selectedNode?.trigger_digit}
             name={"triggerDigit"}
             label="Trigger Digit"
             rules={[
@@ -187,6 +189,7 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
             </Select>
           </Form.Item>
           <Form.Item
+            initialValue={selectedNode?.action_type}
             name={"actionType"}
             label="Action Type"
             rules={[
@@ -206,6 +209,7 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
             </Select>
           </Form.Item>
           <Form.Item
+            initialValue={selectedNode?.action}
             name={"action"}
             label="Action"
             rules={[
@@ -244,7 +248,6 @@ function IvrTreeContainer() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
   const [actionFieldType, setActionFieldType] = useState(false);
-  // const [targetId, setTargetId] = useState(null);
 
   // Defining Nodes and Edges ::--
 
