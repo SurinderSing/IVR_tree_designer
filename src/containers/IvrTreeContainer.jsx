@@ -10,15 +10,15 @@ import ReactFlow, {
   Controls,
 } from "react-flow-renderer";
 import "./styles.less";
-
 import Request from "../request.js";
+import { useSelector, useDispatch } from "react-redux";
 
 // Implimentation of Darge Tree ::--
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-const nodeWidth = 250;
+const nodeWidth = 300;
 const nodeHeight = 200;
 
 // Defining Veriables ::--
@@ -102,10 +102,13 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
     }
   };
 
+  const filterTrigerDigit = (S_Node) => {
+    console.log(S_Node);
+  };
+
   const editNode = (node) => {
     setIsEditModalVisible(true);
     setSelectedNode(() => node);
-    console.log(selectedNode);
   };
 
   const handleCancel = () => {
@@ -147,7 +150,7 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
           editNode(currentNode);
         }}
       />
-      <h1>{currentNode?.trigger_digit}</h1>
+      <h1 className="trigarDigit">{currentNode?.trigger_digit}</h1>
       <hr />
       <h2>{currentNode?.action_type}</h2>
       <hr />
@@ -157,6 +160,7 @@ const NodeFrame = ({ index, delNodes, currentNode, addNode, getData }) => {
         className="nodeBtn"
         onClick={() => {
           addNode(currentNode);
+          filterTrigerDigit(currentNode);
         }}
       >
         +
@@ -253,8 +257,8 @@ function IvrTreeContainer() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-
-  // API Reduests::
+  const dispatch = useDispatch();
+  // API ReduestsAndEdges::
   const delNodes = async (id) => {
     await Request.deleteNode(id);
     getData();
@@ -262,7 +266,9 @@ function IvrTreeContainer() {
 
   const getData = async () => {
     const newNodes = await Request.getNodes();
+    dispatch({ type: "storeNodes", payload: newNodes });
     const newEdges = await Request.getEdges();
+    dispatch({ type: "storeEdges", payload: newEdges });
     if (newNodes && newEdges) {
       if (newNodes[0] === undefined) {
         setIsModalVisible(true);
